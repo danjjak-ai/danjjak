@@ -1,0 +1,27 @@
+# Common
+.DS_Store
+.idea/
+.vscode/
+*.log
+tmp/
+brain/
+
+# Node Backend
+backend/node_modules/
+backend/dist/
+backend/package-lock.json
+backend/.env
+
+# Android Frontend
+frontend/.gradle/
+frontend/build/
+frontend/app/build/
+frontend/local.properties
+frontend/*.iml
+frontend/.idea/
+frontend/app/src/test/
+frontend/app/src/androidTest/
+*.class
+*.apk
+*.output
+*.hprof
