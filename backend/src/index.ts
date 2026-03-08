@@ -1,11 +1,10 @@
 import express from 'express';
-import { json } from 'body-parser';
 import adviceRoutes from './routes/advice.routes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(json());
+app.use(express.json());
 
 app.get('/health', (req, res) => {
     res.status(200).json({ status: 'OK', message: 'Danjjak Backend is running' });
