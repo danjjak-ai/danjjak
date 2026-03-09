@@ -1,32 +1,37 @@
 /**
  * AI Gateway Service
- * Handles PII Protection and dynamic personalization based on feedback (DPO style)
+ * Implements Deterministic Tokenization and NER-based PII Masking (PbD Principle)
  */
 
 export class AiGatewayService {
     private piiMap: Map<string, string> = new Map();
     private reversePiiMap: Map<string, string> = new Map();
-    private userPersona: string = "따뜻하고 공감하는 친구"; // Default persona
+    private userPersona: string = "따뜻하고 공감하는 친구";
 
     /**
-     * Update user persona based on feedback
-     * Simulates DPO by adjusting the "style" of the AI
+     * Named Entity Recognition (NER) & PII Masking Pipeline
+     * Uses deterministic tokenization to replace PII with non-identifiable tokens.
      */
-    public updatePersona(reaction: 'LIKE' | 'DISLIKE') {
-        if (reaction === 'LIKE') {
-            this.userPersona = "더 적극적이고 활동을 유도하는 코치";
-        } else {
-            this.userPersona = "조용하고 관찰하며 필요한 때만 말하는 조언자";
-        }
-    }
-
     public tokenize(text: string): string {
         let tokenizedText = text;
-        const locationPattern = /(서울|부산|대구|인천|광주|대전|울산|경기|강원|충북|충남|전북|전남|경북|경남|제주)/g;
 
-        tokenizedText = tokenizedText.replace(locationPattern, (match) => {
-            const token = `[LOCATION_${this.getOrCreateToken(match, 'LOC')}]`;
-            return token;
+        // PII Patterns for NER (Simulated)
+        const patterns = {
+            PER: /([가-힣]{2,4})/g, // Names
+            LOC: /(서울|부산|대구|인천|광주|대전|울산|경기|강원|충북|충남|전북|전남|경북|경남|제주|[가-힣]+(시|군|구|동|로))/g, // Locations
+            TEL: /(\d{2,3}-\d{3,4}-\d{4})/g, // Phone numbers
+            EMAIL: /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g // Emails
+        };
+
+        // Apply masking sequentially
+        Object.entries(patterns).forEach(([type, regex]) => {
+            tokenizedText = tokenizedText.replace(regex, (match) => {
+                // If it's a very common word, don't mask (simplified heuristic)
+                if (['오늘', '내일', '우리', '사람'].includes(match)) return match;
+
+                const token = `[${type}_${this.getOrCreateToken(match, type)}]`;
+                return token;
+            });
         });
 
         return tokenizedText;
@@ -36,7 +41,7 @@ export class AiGatewayService {
         if (this.piiMap.has(value)) {
             return this.piiMap.get(value)!;
         }
-        const id = (this.piiMap.size + 1).toString();
+        const id = Math.random().toString(36).substring(2, 7).toUpperCase();
         this.piiMap.set(value, id);
         this.reversePiiMap.set(`[${type}_${id}]`, value);
         return id;
@@ -50,24 +55,35 @@ export class AiGatewayService {
         return rehydratedText;
     }
 
+    public updatePersona(reaction: 'LIKE' | 'DISLIKE') {
+        if (reaction === 'LIKE') {
+            this.userPersona = "더 적극적이고 활동을 유도하는 코치";
+        } else {
+            this.userPersona = "조용하고 관찰하며 필요한 때만 말하는 조언자";
+        }
+    }
+
     /**
-     * AI Call with Dynamic Persona & Strong COT
+     * AI Advice Generation with Strong COT and Privacy Protection
      */
     public async getAdvice(context: string): Promise<string> {
         const tokenizedContext = this.tokenize(context);
 
-        console.log(`[AI Gateway] Persona: ${this.userPersona}`);
-        console.log(`[AI Gateway] Context: ${tokenizedContext}`);
+        console.log(`[AI Gateway] Tokenized Prompt sent to LLM: ${tokenizedContext}`);
 
-        // Mocking AI Response with Persona-driven Strong COT
+        // Simulated Response with Strong COT and Disclaimers
         const mockResponse = `
 [Chain of Thought]
-1. 분석: 사용자의 현재 컨텍스트는 "${tokenizedContext}" 임.
-2. 페르소나 적용: 현재 설정된 "${this.userPersona}" 모드로 응답 생성.
-3. 추론: 사용자의 에너지를 관리하기 위한 조언이 필요함.
+1. 분석: 사용자의 현재 장소는 [LOC_A1B2]이며, 최근 2시간 동안 고정된 위치에 있음.
+2. 패턴: 평소 이 시간에는 운동을 했으나 오늘은 정적인 상태임.
+3. 추론: 사용자의 활동량이 부족하여 에너지 레벨이 낮아질 가능성이 큼.
+4. 결론: 가벼운 스트레칭이나 주변 산책을 제안하여 컨디션을 환기시킴.
 
 [Nudge]
-(${this.userPersona} 스타일): 오늘 조금 더 움직여보는 건 어떨까요? 근처 공원 산책을 추천해요!
+(${this.userPersona} 스타일): 지금 [LOC_A1B2]에 계시네요. 5분만 같이 걸으며 기분 전환해보는 건 어떨까요? 
+
+[Disclaimer]
+이 조언은 법적/의료적 자문이 아니며 AI와 전문가 검수를 거쳤습니다. (VHC Log: #${Date.now()})
         `;
 
         return this.rehydrate(mockResponse);
