@@ -1,27 +1,115 @@
-# Common
+# =============================================
+# Danjjak — .gitignore
+# GitHub 표준 + 보안 기준 적용 (2026-03-13)
+# =============================================
+
+# ─────────────────────────────────────────────
+# OS / IDE 공통
+# ─────────────────────────────────────────────
 .DS_Store
+.DS_Store?
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
 .idea/
 .vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# ─────────────────────────────────────────────
+# 보안: 환경변수 / 시크릿
+# ─────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.env
+# .env.example 은 의도적으로 추적 (팀 공유 템플릿)
+
+# 인증 키 / 자격증명 파일
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+google-services.json
+GoogleService-Info.plist
+service-account*.json
+firebase-adminsdk*.json
+
+# ─────────────────────────────────────────────
+# 로그 / 임시 파일
+# ─────────────────────────────────────────────
 *.log
+*.log.*
+logs/
 tmp/
+temp/
 brain/
 
-# Node Backend
+# ─────────────────────────────────────────────
+# Java / JVM 덤프 (용량 큰 파일 방지)
+# ─────────────────────────────────────────────
+*.hprof
+*.class
+hs_err_pid*
+
+# ─────────────────────────────────────────────
+# Node.js 백엔드 (backend/)
+# ─────────────────────────────────────────────
 backend/node_modules/
 backend/dist/
+
+# TypeScript 빌드 산출물 (src/ 내부에 생성되는 경우 방지)
+backend/src/**/*.js
+backend/src/**/*.js.map
+backend/src/**/*.d.ts
+backend/src/**/*.d.ts.map
+
 backend/package-lock.json
 backend/.env
 
-# Android Frontend
+# ─────────────────────────────────────────────
+# Android 프론트엔드 (frontend/)
+# ─────────────────────────────────────────────
+# Gradle 빌드
 frontend/.gradle/
 frontend/build/
 frontend/app/build/
+frontend/**/build/
+
+# Android 로컬 설정 (기기별 경로 포함, git 공유 불필요)
 frontend/local.properties
-frontend/*.iml
+
+# IntelliJ / Android Studio
 frontend/.idea/
+frontend/**/*.iml
+frontend/.kotlin/
+
+# APK / AAB 바이너리
+*.apk
+*.aab
+*.aar
+*.ap_
+
+# ProGuard
+frontend/**/proguard/
+frontend/**/mapping.txt
+
+# 테스트 결과
 frontend/app/src/test/
 frontend/app/src/androidTest/
-*.class
-*.apk
+
+# Release 서명 설정 (보안 — 절대 커밋하면 안 됨)
+frontend/keystore/
+frontend/release/
+frontend/app/release/
+
+# ─────────────────────────────────────────────
+# 기타 빌드 / 패키지 산출물
+# ─────────────────────────────────────────────
 *.output
-*.hprof
+*.zip
+*.tar.gz

@@ -1,6 +1,6 @@
 # Danjjak (단짝) — 구현 내용 상세 분석 문서
 
-> 최종 업데이트: 2026-03-13
+> 최종 업데이트: 2026-03-13 (Gemini API 연동 반영)
 
 ---
 
@@ -28,8 +28,9 @@
 5. [개인정보 보호 아키텍처 (Privacy by Design)](#5-개인정보-보호-아키텍처-privacy-by-design)
 6. [AI 개인화 파이프라인](#6-ai-개인화-파이프라인)
 7. [데이터 흐름 다이어그램](#7-데이터-흐름-다이어그램)
-8. [미구현 / 시뮬레이션 항목](#8-미구현--시뮬레이션-항목)
-9. [파일 트리 요약](#9-파일-트리-요약)
+8. [구현 완료 항목 (v1.1)](#8-구현-완료-항목-v11)
+9. [미구현 / 시뮬레이션 항목](#9-미구현--시뮬레이션-항목)
+10. [파일 트리 요약](#10-파일-트리-요약)
 
 ---
 
@@ -44,9 +45,10 @@
 | **온디바이스 DB** | Room Database (SQLite) |
 | **온디바이스 벡터 저장소** | MemoryVectorStore (In-memory, FAISS 시뮬레이션) |
 | **백엔드** | Node.js + Express.js (TypeScript, ES Module) |
+| **LLM API** ✅ | Google Gemini API (`gemini-1.5-flash`) — 실제 연동 완료 |
 | **푸시 알림** | Firebase Cloud Messaging (FCM) — mock 구현 |
 | **AI 개인화** | LoRA + DPO 시뮬레이션 (L2 Personalization Manager) |
-| **프라이버시 보호** | NER 기반 PII 마스킹 (Deterministic Tokenization) |
+| **프라이버시 보호** | NER 기반 PII 마스킹 → Gemini로 토큰화 후 전송 |
 
 ---
 
@@ -420,10 +422,28 @@ private var loraWeights = mapOf(
 
 `backend/src/index.ts`
 
+- `import 'dotenv/config'`를 최상단에 배치하여 `.env` 파일의 환경변수를 가장 먼저 로드
 - Express 5.x 사용
 - 포트: `process.env.PORT || 3000`
-- Health Check 엔드포인트: `GET /health` → `{ status: 'OK', message: 'Danjjak Backend is running' }`
-- 라우터 마운트: `/api` → `adviceRoutes`
+- **3개 라우터 모두 마운트 완료** (이전에는 `adviceRoutes`만 연결되어 있었음)
+
+**라우터 마운트:**
+```typescript
+app.use('/api', adviceRoutes);           // POST /api/sensor, GET /api/nudge
+app.use('/api/feedback', feedbackRoutes); // POST /api/feedback
+app.use('/auth', authRoutes);            // POST /auth/login, POST /auth/consent
+```
+
+**Health Check 엔드포인트 (`GET /health`) 응답:**
+```json
+{
+  "status": "OK",
+  "message": "Danjjak Backend is running",
+  "gemini": "connected",
+  "model": "gemini-1.5-flash"
+}
+```
+- `gemini` 필드: API Key 설정 여부에 따라 `"connected"` 또는 `"mock mode"`
 
 **실행 스크립트:**
 | 명령 | 동작 |
@@ -432,7 +452,14 @@ private var loraWeights = mapOf(
 | `npm run build` | `tsc` (TypeScript 컴파일) |
 | `npm start` | `node dist/index.js` (프로덕션 실행) |
 
-**key 의존성:** `express@5.x`, `typescript@5.9.x`, `tsx@4.x` (dev)
+**key 의존성:** `express@5.x`, `typescript@5.9.x`, `tsx@4.x` (dev), `@google/generative-ai`, `dotenv`
+
+**환경변수 설정 (`.env`):**
+```dotenv
+GEMINI_API_KEY=your_gemini_api_key_here   # https://aistudio.google.com/app/apikey
+PORT=3000
+GEMINI_MODEL=gemini-1.5-flash
+```
 
 ---
 
@@ -440,53 +467,83 @@ private var loraWeights = mapOf(
 
 | 경로 | HTTP Method | 컨트롤러 / 핸들러 | 설명 |
 |------|-------------|-------------------|------|
-| `/api/sensor` | POST | `adviceController.captureSensor` | 센서 데이터 수신 → L0 저장 + 조건부 푸시 |
-| `/api/nudge` | GET | `adviceController.getAdvice` | 맞춤 조언 생성 요청 |
-| `/api/feedback` | POST | (inline handler) | 이모지 피드백 → DPO 페르소나 업데이트 |
-| `/auth/login` | POST | (inline handler) | SSO 로그인 시뮬레이션 |
-| `/auth/consent` | POST | (inline handler) | 동의 상태 저장 |
-| `/health` | GET | (inline handler) | 서버 상태 확인 |
-
-> **참고**: `auth.routes.ts`와 `feedback.routes.ts`는 `index.ts`에 아직 마운트되지 않음. 현재는 `/api` 하위에 `adviceRoutes`만 연결되어 있다.
+| `/api/sensor` | POST | `adviceController.captureSensor` | 센서 데이터 수신 → L0 저장 + 조건부 Gemini 조언+푸시 |
+| `/api/nudge` | GET | `adviceController.getAdvice` | Gemini API 맞춤 조언 생성 요청 |
+| `/api/feedback` ✅ | POST | `feedback.routes.ts` | 이모지 피드백 → DPO 페르소나 업데이트 |
+| `/auth/login` ✅ | POST | `auth.routes.ts` | SSO 로그인 시뮬레이션 |
+| `/auth/consent` ✅ | POST | `auth.routes.ts` | 동의 상태 저장 |
+| `/health` | GET | (inline handler) | 서버 상태 + Gemini 연결 상태 확인 |
 
 ---
 
 ### 4.3 서비스 층
 
-#### AiGatewayService (`aiGateway.service.ts`)
+#### AiGatewayService (`aiGateway.service.ts`) ✅ Gemini 연동 완료
 
-Privacy by Design의 핵심 구현체. 데이터가 외부 LLM으로 전송되기 전에 PII를 제거한다.
+Privacy by Design의 핵심 구현체. PII 마스킹 후 **실제 Gemini API**를 호출하여 Strong COT 조언을 생성한다.
 
-**`tokenize(text)` — NER 기반 PII 마스킹:**
+**생성자 (Constructor) — API Key 감지 및 모드 결정:**
+```typescript
+constructor() {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (apiKey && apiKey !== 'your_gemini_api_key_here') {
+        this.genAI = new GoogleGenerativeAI(apiKey);
+        this.model = this.genAI.getGenerativeModel({ model: modelName });
+        // → 실제 Gemini API 모드
+    } else {
+        // → Mock 폴백 모드 (개발용)
+    }
+}
+```
+
+**`tokenize(text)` — NER 기반 PII 마스킹 (적용 순서 개선):**
 
 ```
 입력: "김철수가 서울 강남구에서 010-1234-5678로 전화했다"
 출력: "[PER_A3B2C]가 [LOC_X9Y8Z]에서 [TEL_D4E5F]로 전화했다"
 ```
 
-| 패턴 타입 | 정규식 | 대상 |
-|-----------|--------|------|
-| `PER` | `/([가-힣]{2,4})/g` | 한국어 이름 |
-| `LOC` | `/(서울\|부산\|...\|[가-힣]+(시\|군\|구\|동\|로))/g` | 지역명 |
-| `TEL` | `/(\d{2,3}-\d{3,4}-\d{4})/g` | 전화번호 |
-| `EMAIL` | `/([a-zA-Z0-9._%+-]+@...)/g` | 이메일 |
+| 순서 | 패턴 타입 | 정규식 | 대상 |
+|------|-----------|--------|------|
+| 1 | `TEL` | `/(\d{2,3}-\d{3,4}-\d{4})/g` | 전화번호 (먼저 처리해야 PER 오탐 방지) |
+| 2 | `EMAIL` | `/([a-zA-Z0-9._%+-]+@...)/g` | 이메일 |
+| 3 | `LOC` | `/(서울\|부산\|...\|[가-힣]+(시\|군\|구\|동\|로))/g` | 지역명 |
+| 4 | `PER` | `/([가-힣]{2,4})/g` | 한국어 이름 (마지막 처리) |
 
-- `getOrCreateToken()`: `Math.random().toString(36)` 기반 결정론적 ID 생성, `piiMap` / `reversePiiMap`에 양방향 저장
-- `rehydrate(text)`: AI 응답에서 토큰을 원래 값으로 복원
+> ⚠️ 처리 순서가 중요: TEL/EMAIL을 먼저 처리해야 PER 정규식의 오탐(전화번호 숫자 등)을 방지한다.
+
+- `getOrCreateToken()`: `Math.random().toString(36)` 기반 결정론적 ID, `piiMap` / `reversePiiMap` 양방향 Map
+- `rehydrate(text)`: AI 응답의 토큰을 원래 값으로 복원
 - `updatePersona(reaction)`: `LIKE` → 적극적 코치, `DISLIKE` → 조용한 조언자
 
-**`getAdvice(context)` — Strong Chain-of-Thought 패턴:**
+**`getAdvice(context)` — 실제 Gemini API 호출 흐름:**
 ```
-[Chain of Thought]
-1. 분석: ...
-2. 패턴: ...
-3. 추론: ...
-4. 결론: ...
-
-[Nudge] (페르소나 스타일)
-
-[Disclaimer] 법적/의료적 자문 아님 + VHC Log ID
+1. tokenize(context)        → PII 마스킹
+2. model ? callGemini()     → Gemini API 호출
+          : getMockResponse() → Mock 폴백
+3. rehydrate(response)      → 토큰 복원 후 반환
 ```
+
+**`callGemini()` — 시스템 프롬프트 구조 (Strong COT):**
+```
+[시스템 프롬프트]
+  - 역할: '단짝' 개인 AI 동반자
+  - 현재 페르소나: DPO로 업데이트된 userPersona 문자열
+  - 응답 형식 강제:
+      [분석] 현재 상황 객관적 분석
+      [패턴] 발견된 행동/활동 패턴
+      [추론] 사용자에게 필요한 것
+      [결론] 제안할 행동
+      [조언] 페르소나 스타일 맞춤 조언 (2-3문장, 실행 가능)
+      [면책] AI 생성 일반 제안임을 명시
+
+[유저 메시지]
+  - 토큰화된 컨텍스트 (PII 제거 후)
+```
+
+**`getMockResponse()` — API 오류/Key 미설정 시 폴백:**
+- API Key 없는 개발 환경에서도 서버가 정상 동작하도록 보장
+- 동일한 COT 구조 (`[분석][패턴][추론][결론][조언][면책]`)의 샘플 응답 반환
 
 #### MemoryService (`memory.service.ts`)
 
@@ -570,7 +627,7 @@ Danjjak의 PbD는 **4단계 보호 레이어**로 구성된다:
 [ AI Gateway (NER/PII 마스킹) ] ← 외부 전송 전 또 한 번 필터링
       │ (토큰화된 컨텍스트만 전송)
       ▼
-[ 외부 LLM API ] (현재 mock)
+[ Gemini API ] (`gemini-1.5-flash`) ✅ 실제 연동
       │ (토큰이 포함된 응답)
       ▼
 [ rehydrate() ] ← 응답에서 토큰 → 원래값 복원 (앱 내에서만)
@@ -655,26 +712,37 @@ Danjjak의 PbD는 **4단계 보호 레이어**로 구성된다:
 
 ---
 
-## 8. 미구현 / 시뮬레이션 항목
+## 8. 구현 완료 항목 (v1.1)
+
+> 기존 미구현 상태에서 **v1.1 업데이트(2026-03-13)**에서 완료된 항목들
+
+| 항목 | 완료 내용 | 관련 파일 |
+|------|-----------|----------|
+| ✅ **LLM API 연동** | Google Gemini API(`gemini-1.5-flash`) 실제 호출 구현. PII 마스킹 후 Strong COT 시스템 프롬프트와 함께 전송. API 오류/Key 미설정 시 Mock 폴백 자동 적용. | `aiGateway.service.ts` |
+| ✅ **백엔드 auth/feedback 라우트 마운트** | `index.ts`에 `authRoutes`(`/auth`), `feedbackRoutes`(`/api/feedback`) 연결 완료. 기존에는 라우트 파일만 존재하고 마운트되지 않은 상태였음. | `index.ts` |
+| ✅ **환경변수 관리** | `dotenv` 도입. `.env` / `.env.example` 파일 추가. `GEMINI_API_KEY`, `PORT`, `GEMINI_MODEL` 환경변수로 관리. | `.env`, `.env.example` |
+| ✅ **Health Check 개선** | `/health` 응답에 `gemini` 연결 상태(`connected`/`mock mode`) 및 `model` 정보 추가. | `index.ts` |
+
+---
+
+## 9. 미구현 / 시뮬레이션 항목
 
 현재 코드는 MVP 단계로, 다음 항목은 **시뮬레이션 또는 미구현** 상태이다:
 
 | 항목 | 현재 상태 | 실제 구현 시 필요 내용 |
 |------|-----------|------------------------|
 | FCM 푸시 알림 | mock (`fcm_mock_12345`) | Firebase Admin SDK + FCM Token 관리 |
-| LLM API 연동 | 하드코딩된 COT 응답 | Gemini API / OpenAI API 연동 |
 | 실제 LoRA 파인튜닝 | `loraWeights` Map 시뮬레이션 | MediaPipe LLM Inference API / TFLite |
 | 벡터 임베딩 | 문자 코드 기반 mock 벡터 | on-device Text Embedding 모델 |
 | Semantic Search | 텍스트 포함 검색 | 코사인 유사도 + FAISS/Annoy 라이브러리 |
 | SSO 로그인 | `onLoginSuccess()` 직접 호출 | Kakao SDK, Google Sign-In 연동 |
 | 기록 저장 버튼 | `{}` 빈 람다 | Room DB 또는 Backend API 저장 로직 |
-| 백엔드 auth/feedback 라우트 | 정의되었으나 index.ts에 미마운트 | `app.use('/auth', authRoutes)` 추가 필요 |
-| PII 마스킹 정확도 | 단순 regex | NER 딥러닝 모델 (spaCy, BERT-NER 등) |
+| PII 마스킹 정확도 | 단순 regex (오탐 가능성) | NER 딥러닝 모델 (spaCy, BERT-NER 등) |
 | 실제 센서 수집 | mock GPS/앱사용 JSON 하드코딩 | `LocationManager`, `UsageStatsManager` API |
 
 ---
 
-## 9. 파일 트리 요약
+## 10. 파일 트리 요약
 
 ```
 Danjjak/
@@ -682,18 +750,20 @@ Danjjak/
 ├── research.md                          ← 이 문서
 │
 ├── backend/                             ← Node.js + TypeScript 백엔드
-│   ├── package.json
+│   ├── package.json                     ← @google/generative-ai, dotenv 포함
 │   ├── tsconfig.json
+│   ├── .env                             ← [신규] GEMINI_API_KEY 등 환경변수 (git 제외)
+│   ├── .env.example                     ← [신규] 팀 공유용 환경변수 예시
 │   └── src/
-│       ├── index.ts                     ← Express 서버 진입점
+│       ├── index.ts                     ← dotenv 로드 + 3개 라우터 모두 마운트
 │       ├── controllers/
-│       │   └── advice.controller.ts     ← 센서 수신 + 조언 생성 컨트롤러
+│       │   └── advice.controller.ts     ← 센서 수신 + Gemini 조언 생성 컨트롤러
 │       ├── routes/
 │       │   ├── advice.routes.ts         ← /api/sensor, /api/nudge
-│       │   ├── auth.routes.ts           ← /auth/login, /auth/consent (미마운트)
-│       │   └── feedback.routes.ts       ← /api/feedback (미마운트)
+│       │   ├── auth.routes.ts           ← /auth/login, /auth/consent ✅ 마운트 완료
+│       │   └── feedback.routes.ts       ← /api/feedback ✅ 마운트 완료
 │       └── services/
-│           ├── aiGateway.service.ts     ← NER PII 마스킹 + COT 조언 생성
+│           ├── aiGateway.service.ts     ← [갱신] NER PII 마스킹 + 실제 Gemini API 호출
 │           ├── memory.service.ts        ← L0/L1/L2 메모리 파이프라인
 │           └── push.service.ts          ← FCM Push Notification (mock)
 │
@@ -735,6 +805,13 @@ Danjjak/
 ```
 
 ---
+
+## 변경 이력
+
+| 버전 | 날짜 | 내용 |
+|------|------|------|
+| v1.0 | 2026-03-13 | 초기 구현 분석 문서 작성 |
+| v1.1 | 2026-03-13 | Gemini API 실제 연동, auth/feedback 라우트 마운트, dotenv 도입 반영 |
 
 *본 문서는 현재 구현된 코드를 기반으로 작성된 분석 문서이며,*
 *미구현 항목은 향후 개발 로드맵에서 순차적으로 완성될 예정입니다.*
