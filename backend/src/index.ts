@@ -3,10 +3,17 @@ import express from 'express';
 import adviceRoutes from './routes/advice.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import feedbackRoutes from './routes/feedback.routes.js';
+import journalRoutes from './routes/journal.routes.js';
+import cors from 'cors';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+app.use(cors({
+    origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 
 // ─────────────────────────
@@ -28,6 +35,7 @@ app.get('/health', (req, res) => {
 // ─────────────────────────
 app.use('/api', adviceRoutes);          // POST /api/sensor, GET /api/nudge
 app.use('/api/feedback', feedbackRoutes); // POST /api/feedback
+app.use('/api/journal', journalRoutes);   // POST /api/journal
 app.use('/auth', authRoutes);           // POST /auth/login, POST /auth/consent
 
 app.listen(PORT, () => {

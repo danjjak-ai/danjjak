@@ -37,6 +37,22 @@ export class MemoryService {
     }
 
     /**
+     * Store Journal Entry (L1)
+     */
+    public async storeJournal(text: string, tags: string[]): Promise<NaturalMemory> {
+        const memory: NaturalMemory = {
+            timestamp: new Date(),
+            event: "Journal Entry",
+            description: text,
+            tags: ["daily", "manual", ...tags]
+        };
+        this.l1_storage.push(memory);
+        console.log(`[Journal] Saved and added to L1: ${text}`);
+        await this.updateL2();
+        return memory;
+    }
+
+    /**
      * Process Raw Data to Natural Language (L1)
      */
     private async processL0ToL1() {

@@ -113,3 +113,43 @@ frontend/app/release/
 *.output
 *.zip
 *.tar.gz
+
+# ─────────────────────────────────────────────
+# Python / AI 모델 / 가상환경
+# ─────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.env/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ─────────────────────────────────────────────
+# 테스트 / 커버리지 캐시
+# ─────────────────────────────────────────────
+.pytest_cache/
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+
+# ─────────────────────────────────────────────
+# 로컬 데이터베이스 / 스토리지
+# ─────────────────────────────────────────────
+*.sqlite
+*.sqlite3
+*.db
+*.db-journal
+
+# ─────────────────────────────────────────────
+# 추가적인 시크릿 / 인증 관련 파일
+# ─────────────────────────────────────────────
+secrets.json
+oauth.json
+config/credentials.json
+.npmrc
+credentials.json
+client_secret.json

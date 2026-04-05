@@ -26,10 +26,14 @@ class SensorService : Service() {
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
     private val CHANNEL_ID = "SensorServiceChannel"
     private lateinit var db: AppDatabase
+    private lateinit var locationManager: LocationManager
+    private lateinit var usageStatsCollector: UsageStatsCollector
 
     override fun onCreate() {
         super.onCreate()
         db = AppDatabase.getDatabase(this)
+        locationManager = LocationManager(this)
+        usageStatsCollector = UsageStatsCollector(this)
         createNotificationChannel()
     }
 
@@ -67,13 +71,26 @@ class SensorService : Service() {
         serviceScope.launch {
             while (isActive) {
                 // 16 Context Scenarios detection simulation
-                // Capture GPS
-                val gpsData = SensorData(type = "GPS", value = "{\"lat\": 37.5665, \"lng\": 126.9780}")
+                // Capture GPS using real LocationManager
+                val location = locationManager.getCurrentLocation()
+                val lat = location?.latitude ?: 37.5665
+                val lng = location?.longitude ?: 126.9780
+                val gpsData = SensorData(type = "GPS", value = "{\"lat\": $lat, \"lng\": $lng}")
                 db.sensorDao().insert(gpsData)
                 
-                // Capture App Usage (to detect excessive media use)
-                val appUsageData = SensorData(type = "APP_USAGE", value = "{\"app\": \"YouTube\", \"duration\": 120}")
-                db.sensorDao().insert(appUsageData)
+                // Capture App Usage using UsageStatsCollector
+                if (usageStatsCollector.hasUsagePermission()) {
+                    val topApps = usageStatsCollector.getRecentAppUsage()
+                    if (topApps.isNotEmpty()) {
+                        val topApp = topApps.first()
+                        val appUsageData = SensorData(type = "APP_USAGE", value = "{\"app\": \"${topApp.packageName}\", \"duration\": ${topApp.durationMinutes}}")
+                        db.sensorDao().insert(appUsageData)
+                    }
+                } else {
+                    // Fallback to mock if permission not granted
+                    val appUsageData = SensorData(type = "APP_USAGE", value = "{\"app\": \"Permission_Required\", \"duration\": 0}")
+                    db.sensorDao().insert(appUsageData)
+                }
 
                 // Privacy by Design: We don't send the full raw data if not needed.
                 // We send a sanitized version or wait for L1 processing.

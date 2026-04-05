@@ -20,18 +20,29 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.launch
+import com.danjjak.data.remote.ApiService
+import com.danjjak.data.remote.dto.JournalRequest
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventRegistrationScreen() {
     var reflectionText by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
+    val scope = rememberCoroutineScope()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var isSaving by remember { mutableStateOf(false) }
 
+    Scaffold(
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { paddingValues ->
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFFBF8FF))
+            .padding(paddingValues)
             .verticalScroll(scrollState)
     ) {
         // Aesthetic Header
@@ -126,24 +137,51 @@ fun EventRegistrationScreen() {
             Spacer(modifier = Modifier.height(24.dp))
 
             Button(
-                onClick = { /* Save Logic */ },
+                onClick = { 
+                    if (reflectionText.isNotBlank()) {
+                        scope.launch {
+                            isSaving = true
+                            try {
+                                val response = ApiService.api.saveJournal(
+                                    JournalRequest(text = reflectionText, tags = listOf("daily", "manual"))
+                                )
+                                if (response.success) {
+                                    reflectionText = ""
+                                    snackbarHostState.showSnackbar("기록이 저장되었습니다 ✨")
+                                } else {
+                                    snackbarHostState.showSnackbar("저장에 실패했습니다.")
+                                }
+                            } catch (e: Exception) {
+                                snackbarHostState.showSnackbar("저장 중 오류가 발생했습니다.")
+                            } finally {
+                                isSaving = false
+                            }
+                        }
+                    }
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
                 shape = RoundedCornerShape(16.dp),
+                enabled = reflectionText.isNotBlank() && !isSaving,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF6750A4)
                 )
             ) {
-                Text(
-                    text = "기록 저장하기",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold
-                )
+                if (isSaving) {
+                    CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
+                } else {
+                    Text(
+                        text = "기록 저장하기",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
             }
         }
         
         Spacer(modifier = Modifier.height(32.dp))
+    }
     }
 }
 

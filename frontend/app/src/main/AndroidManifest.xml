@@ -7,8 +7,10 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS" xmlns:tools="http://schemas.android.com/tools" tools:ignore="ProtectedPermissions" />
 
     <application
+        android:name=".DanjjakApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="Danjjak"
@@ -30,6 +32,12 @@
             android:name=".service.SensorService"
             android:enabled="true"
             android:exported="false" />
+
+        <service android:name=".service.DanjjakFirebaseService" android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
 
         <receiver
             android:name=".service.BootReceiver"

@@ -20,13 +20,20 @@ import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.ThumbDown
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.hilt.navigation.compose.hiltViewModel
 
 /**
  * Digital Twin Dashboard
  * "Expensive Looking" UI with 3D-like visuals and health graphs.
  */
 @Composable
-fun DigitalTwinDashboard() {
+fun DigitalTwinDashboard(viewModel: DashboardViewModel = hiltViewModel()) {
+    val advice by viewModel.advice.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
     val scrollState = rememberScrollState()
     
     Box(
@@ -159,12 +166,32 @@ fun DigitalTwinDashboard() {
                         )
                     }
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "\"전반적으로 안정적인 활동 패턴을 보이고 있습니다. 3시간 뒤 정기적인 스트레칭을 추천드려요.\"",
-                        color = Color.White,
-                        fontSize = 15.sp,
-                        lineHeight = 22.sp
-                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    if (isLoading) {
+                        CircularProgressIndicator(color = Color(0xFFBB86FC), modifier = Modifier.size(24.dp).align(Alignment.CenterHorizontally))
+                        Spacer(modifier = Modifier.height(8.dp))
+                    } else {
+                        Text(
+                            text = advice ?: "\"AI 분석을 기다리는 중입니다...\"",
+                            color = Color.White,
+                            fontSize = 15.sp,
+                            lineHeight = 22.sp
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            IconButton(onClick = { viewModel.loadAdvice() }) {
+                                Icon(Icons.Default.Refresh, contentDescription = "새로고침", tint = Color.White.copy(alpha=0.7f))
+                            }
+                            IconButton(onClick = { viewModel.sendFeedback("LIKE") }) {
+                                Icon(Icons.Default.ThumbUp, contentDescription = "좋아요", tint = Color.White.copy(alpha=0.7f))
+                            }
+                            IconButton(onClick = { viewModel.sendFeedback("DISLIKE") }) {
+                                Icon(Icons.Default.ThumbDown, contentDescription = "별로예요", tint = Color.White.copy(alpha=0.7f))
+                            }
+                        }
+                    }
                     Spacer(modifier = Modifier.height(16.dp))
                     Divider(color = Color.White.copy(alpha = 0.05f))
                     Spacer(modifier = Modifier.height(12.dp))
