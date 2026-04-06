@@ -48,6 +48,8 @@
 | **LLM API** ✅ | Google Gemini API (`gemini-1.5-flash`) — 실제 연동 완료 |
 | **푸시 알림** | Firebase Cloud Messaging (FCM) — mock 구현 |
 | **AI 개인화** | LoRA + DPO 시뮬레이션 (L2 Personalization Manager) |
+| **식단 관리** ✅ | Gemini 기반 자연어 식단 분석 및 영양소 추정 기능 | 컨트롤러 연동 완료 |
+| **식당 추천** ✅ | 추천 식단 기반 주변 식당 검색(Google Maps 연동) | 구현 완료 |
 | **프라이버시 보호** | NER 기반 PII 마스킹 → Gemini로 토큰화 후 전송 |
 
 ---
@@ -812,6 +814,7 @@ Danjjak/
 |------|------|------|
 | v1.0 | 2026-03-13 | 초기 구현 분석 문서 작성 |
 | v1.1 | 2026-03-13 | Gemini API 실제 연동, auth/feedback 라우트 마운트, dotenv 도입 반영 |
+| v1.2 | 2026-04-06 | 식단 관리 기능(Remind Nudge, Gemini 자연어 분석, 식단 채팅 UI) 추가 |
 
 *본 문서는 현재 구현된 코드를 기반으로 작성된 분석 문서이며,*
 *미구현 항목은 향후 개발 로드맵에서 순차적으로 완성될 예정입니다.*

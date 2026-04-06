@@ -18,6 +18,9 @@ interface DanjjakApi {
 
     @POST("api/feedback")
     suspend fun sendFeedback(@Body request: FeedbackRequest): FeedbackResponse
+
+    @POST("api/meal")
+    suspend fun saveMeal(@Body request: MealRequest): MealResponse
 }
 
 object ApiService {

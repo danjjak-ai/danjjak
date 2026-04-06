@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.ChevronLeft
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,25 +41,17 @@ data class TimelineEvent(
 )
 
 @Composable
-fun TimelineScreen() {
-    var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
+fun TimelineScreen(viewModel: TimelineViewModel = hiltViewModel()) {
+    val selectedDate by viewModel.selectedDate.collectAsState()
+    val events by viewModel.events.collectAsState()
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
 
-    // Mock Data
-    val allEvents = remember {
-        listOf(
-            TimelineEvent("08:30 AM", "아침 운동", "공원에서 30분간 조깅 완료", "Health", LocalDate.now()),
-            TimelineEvent("01:00 PM", "점심 식사", "강남구 삼성동 '회사 근처 식당'", "Location", LocalDate.now()),
-            TimelineEvent("07:00 PM", "자료 조사", "유튜브 생산성 채널 2시간 시청", "Media", LocalDate.now()),
-            TimelineEvent("11:30 PM", "하루 마무리", "AI 단짝과 대화 나눔", "Personal", LocalDate.now()),
-            TimelineEvent("10:00 AM", "주말 등산", "관악산 정상 도착!", "Health", LocalDate.now().minusDays(1)),
-            TimelineEvent("02:00 PM", "카페 공부", "자바스크립트 프레임워크 학습", "Study", LocalDate.now().minusDays(2))
-        )
-    }
+    // SelectedDate logic updated to use ViewModel state (date/null toggle logic preserved)
+    var detailDate by remember { mutableStateOf<LocalDate?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
         AnimatedContent(
-            targetState = selectedDate,
+            targetState = detailDate,
             transitionSpec = {
                 if (targetState != null) {
                     slideInHorizontally { it } + fadeIn() togetherWith
@@ -73,15 +66,17 @@ fun TimelineScreen() {
             if (date == null) {
                 CalendarView(
                     currentMonth = currentMonth,
-                    onDateSelected = { selectedDate = it },
+                    onDateSelected = { 
+                        viewModel.setSelectedDate(it)
+                        detailDate = it 
+                    },
                     onMonthChange = { currentMonth = it }
                 )
             } else {
-                val dayEvents = allEvents.filter { it.date == date }
                 TimelineDetailView(
                     date = date,
-                    events = dayEvents,
-                    onBack = { selectedDate = null }
+                    events = events,
+                    onBack = { detailDate = null }
                 )
             }
         }
@@ -320,6 +315,7 @@ fun getCategoryColor(category: String): Color {
         "Media" -> Color(0xFFFF9800)
         "Personal" -> Color(0xFF9C27B0)
         "Study" -> Color(0xFFF44336)
+        "Meal" -> Color(0xFF673AB7) // Deep Purple for Meal
         else -> Color.Gray
     }
 }

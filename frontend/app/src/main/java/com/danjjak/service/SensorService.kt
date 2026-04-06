@@ -15,6 +15,7 @@ import com.danjjak.data.L0.SensorData
 import kotlinx.coroutines.*
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.*
 import org.json.JSONObject
 
 /**
@@ -44,6 +45,7 @@ class SensorService : Service() {
         startForeground(1, notification)
 
         startDataCollection()
+        startMealReminderLoop()
         return START_STICKY
     }
 
@@ -65,6 +67,59 @@ class SensorService : Service() {
             .setContentText("백그라운드에서 데이터를 안전하게 기기 내에 저장하고 있습니다.")
             .setSmallIcon(android.R.drawable.ic_menu_mylocation)
             .build()
+    }
+
+    private fun startMealReminderLoop() {
+        serviceScope.launch {
+            while (isActive) {
+                checkMealReminder()
+                delay(60000 * 60) // Check every hour
+            }
+        }
+    }
+
+    private suspend fun checkMealReminder() {
+        val calendar = Calendar.getInstance()
+        val hour = calendar.get(Calendar.HOUR_OF_DAY)
+        
+        // Reminder slots: Morning (9 AM), Lunch (1 PM), Dinner (7 PM)
+        val isReminderHour = when (hour) {
+            10 -> true // Breakfast check at 10 AM
+            14 -> true // Lunch check at 2 PM
+            20 -> true // Dinner check at 8 PM
+            else -> false
+        }
+        
+        if (isReminderHour) {
+            val startTime = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, hour - 4) // check last 4 hours
+            }.timeInMillis
+            
+            val hasMeal = db.sensorDao().hasRecentMeal(startTime, System.currentTimeMillis())
+            
+            if (!hasMeal) {
+                showMealReminderNotification(hour)
+            }
+        }
+    }
+
+    private fun showMealReminderNotification(hour: Int) {
+        val mealName = when {
+            hour < 12 -> "아침"
+            hour < 16 -> "점심"
+            else -> "저녁"
+        }
+        
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        val notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("단짝이 궁금해요! 🍏")
+            .setContentText("오늘 $mealName 식시는 무엇을 드셨나요? 기록해 주세요.")
+            .setSmallIcon(android.R.drawable.ic_menu_edit)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .build()
+        
+        notificationManager.notify(1001, notification)
     }
 
     private fun startDataCollection() {

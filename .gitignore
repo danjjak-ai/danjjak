@@ -153,3 +153,10 @@ config/credentials.json
 .npmrc
 credentials.json
 client_secret.json
+ 
+# ─────────────────────────────────────────────
+# 개발 문서 (기획/설계) — .gitignore
+# ─────────────────────────────────────────────
+UIX.md
+plan.md
+research.md

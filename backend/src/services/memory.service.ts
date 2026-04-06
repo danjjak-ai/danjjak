@@ -7,7 +7,7 @@
 
 export interface RawData {
     timestamp: Date;
-    type: 'GPS' | 'ACCEL' | 'APP_USAGE' | 'LIGHT';
+    type: 'GPS' | 'ACCEL' | 'APP_USAGE' | 'LIGHT' | 'MEAL';
     value: any;
 }
 
@@ -86,3 +86,19 @@ export class MemoryService {
 }
 
 export const memoryService = new MemoryService();
+
+/**
+ * Memory Service Registry for per-user isolation
+ */
+class MemoryServiceRegistry {
+    private instances: Map<string, MemoryService> = new Map();
+
+    public getForUser(userId: string): MemoryService {
+        if (!this.instances.has(userId)) {
+            this.instances.set(userId, new MemoryService());
+        }
+        return this.instances.get(userId)!;
+    }
+}
+
+export const memoryRegistry = new MemoryServiceRegistry();

@@ -4,6 +4,7 @@ import adviceRoutes from './routes/advice.routes.js';
 import authRoutes from './routes/auth.routes.js';
 import feedbackRoutes from './routes/feedback.routes.js';
 import journalRoutes from './routes/journal.routes.js';
+import mealRoutes from './routes/meal.routes.js';
 import cors from 'cors';
 
 const app = express();
@@ -36,6 +37,7 @@ app.get('/health', (req, res) => {
 app.use('/api', adviceRoutes);          // POST /api/sensor, GET /api/nudge
 app.use('/api/feedback', feedbackRoutes); // POST /api/feedback
 app.use('/api/journal', journalRoutes);   // POST /api/journal
+app.use('/api/meal', mealRoutes);         // POST /api/meal
 app.use('/auth', authRoutes);           // POST /auth/login, POST /auth/consent
 
 app.listen(PORT, () => {

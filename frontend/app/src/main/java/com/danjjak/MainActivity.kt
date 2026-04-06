@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.EditNote
+import androidx.compose.material.icons.filled.RamenDining
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -21,6 +22,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import com.danjjak.ui.dashboard.DashboardScreen
 import com.danjjak.ui.timeline.TimelineScreen
 import com.danjjak.ui.registration.EventRegistrationScreen
+import com.danjjak.ui.registration.MealRegistrationScreen
 import com.danjjak.ui.auth.LoginScreen
 import com.danjjak.ui.auth.ConsentScreen
 import com.danjjak.ui.theme.DanjjakTheme
@@ -103,6 +105,22 @@ fun MainScreenLayout() {
                     )
                 )
                 NavigationBarItem(
+                    selected = currentRoute == "meal",
+                    onClick = { 
+                        bottomNavController.navigate("meal") {
+                            popUpTo(bottomNavController.graph.startDestinationId)
+                            launchSingleTop = true
+                        }
+                    },
+                    icon = { Icon(Icons.Default.RamenDining, contentDescription = "Meal") },
+                    label = { Text("식단관리") },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = Color(0xFF6750A4),
+                        selectedTextColor = Color(0xFF6750A4),
+                        indicatorColor = Color(0xFFEADDFF)
+                    )
+                )
+                NavigationBarItem(
                     selected = currentRoute == "timeline",
                     onClick = { 
                         bottomNavController.navigate("timeline") {
@@ -128,6 +146,7 @@ fun MainScreenLayout() {
             NavHost(navController = bottomNavController, startDestination = "dashboard") {
                 composable("dashboard") { DashboardScreen() }
                 composable("registration") { EventRegistrationScreen() }
+                composable("meal") { MealRegistrationScreen() }
                 composable("timeline") { TimelineScreen() }
             }
         }
