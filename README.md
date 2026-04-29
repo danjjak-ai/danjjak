@@ -1,5 +1,3 @@
-# Danjjak (단짝) - AI-Native Life Context Assistant
-
 ![Danjjak Banner](https://img.shields.io/badge/AI--Native-Life--Context-6750A4?style=for-the-badge)
 ![Frontend](https://img.shields.io/badge/React-Ionic-3880FF?style=for-the-badge&logo=ionic)
 ![Native Bridge](https://img.shields.io/badge/Capacitor-Android%2FiOS-119EFF?style=for-the-badge&logo=capacitor)
@@ -7,9 +5,9 @@
 
 **단짝(Danjjak)**은 사용자의 일상을 기록하고 분석하여 웰빙을 향상시키는 AI 네이티브 라이프 컨텍스트 어시스턴트입니다. 이제 웹 기반 크로스 플랫폼 기술을 통해 Android와 iOS 모두에서 동일하게 아름다운 사용자 경험과 강력한 지능형 기능을 제공합니다.
 
----
 
-## ✨ 주요 기능 (Key Features)
+## Getting Started
+To get started, follow the instructions below:
 
 ### 📊 디지털 트윈 대시보드 (Dashboard)
 - 사용자의 활동 상태를 시각화한 애니메이션 대시보드.
