@@ -1,0 +1,133 @@
+.reg-container {
+  padding: calc(var(--safe-top) + var(--space-lg)) var(--space-md) calc(var(--safe-bottom) + 80px);
+  min-height: 100%;
+}
+
+.reg-header {
+  margin-bottom: var(--space-lg);
+}
+.reg-title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--on-surface);
+}
+.reg-subtitle {
+  font-size: 14px;
+  color: var(--on-surface-muted);
+  margin-top: 4px;
+}
+
+/* ─── Suggestion Chips ─── */
+.reg-suggestions {
+  margin-bottom: var(--space-lg);
+}
+.reg-suggestions-label {
+  font-size: 13px;
+  color: var(--on-surface-muted);
+  margin-bottom: var(--space-sm);
+}
+.reg-suggestions-scroll {
+  display: flex;
+  gap: var(--space-sm);
+  overflow-x: auto;
+  padding-bottom: var(--space-sm);
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.reg-suggestions-scroll::-webkit-scrollbar { display: none; }
+
+.suggestion-chip {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: var(--radius-full);
+  border: none;
+  background: var(--chip-bg, #E8DEF8);
+  font-family: var(--font-primary);
+  font-size: 13px;
+  font-weight: 500;
+  color: #1E1E2E;
+  cursor: pointer;
+  transition: transform var(--transition-fast);
+  white-space: nowrap;
+}
+.suggestion-chip:active {
+  transform: scale(0.95);
+}
+.suggestion-emoji {
+  font-size: 16px;
+}
+
+/* ─── Textarea ─── */
+.reg-input-area {
+  margin-bottom: var(--space-lg);
+}
+
+.reg-textarea {
+  width: 100%;
+  padding: var(--space-md);
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--radius-lg);
+  background: var(--surface-container);
+  color: var(--on-surface);
+  font-family: var(--font-primary);
+  font-size: 15px;
+  line-height: 1.8;
+  resize: none;
+  outline: none;
+  transition: border-color var(--transition-fast);
+}
+.reg-textarea::placeholder {
+  color: var(--on-surface-muted);
+}
+.reg-textarea:focus {
+  border-color: var(--primary);
+}
+
+.reg-char-count {
+  text-align: right;
+  font-size: 12px;
+  color: var(--on-surface-muted);
+  margin-top: 6px;
+}
+
+/* ─── Save Button ─── */
+.reg-save-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: var(--radius-md);
+  font-family: var(--font-primary);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  background: var(--surface-variant);
+  color: var(--on-surface-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.reg-save-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.reg-save-btn--active {
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: var(--on-primary);
+  box-shadow: var(--shadow-glow);
+}
+.reg-save-btn--active:active {
+  transform: scale(0.98);
+}
+
+.reg-spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}

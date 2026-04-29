@@ -57,10 +57,18 @@ brain/
 hs_err_pid*
 
 # ─────────────────────────────────────────────
-# Node.js 백엔드 (backend/)
+# Node.js 백엔드 & 프론트엔드 (backend/ & app/)
 # ─────────────────────────────────────────────
+node_modules/
+dist/
+dist-ssr/
+*.local
+
 backend/node_modules/
 backend/dist/
+app/node_modules/
+app/dist/
+app/dist-ssr/
 
 # TypeScript 빌드 산출물 (src/ 내부에 생성되는 경우 방지)
 backend/src/**/*.js
@@ -72,13 +80,18 @@ backend/package-lock.json
 backend/.env
 
 # ─────────────────────────────────────────────
-# Android 프론트엔드 (frontend/)
+# Android (Legacy frontend/ & New app/android/)
 # ─────────────────────────────────────────────
-# Gradle 빌드
+.gradle/
+build/
+app/android/.gradle/
+app/android/build/
+app/android/app/build/
 frontend/.gradle/
 frontend/build/
 frontend/app/build/
-frontend/**/build/
+**/build/
+**/.gradle/
 
 # Android 로컬 설정 (기기별 경로 포함, git 공유 불필요)
 frontend/local.properties
@@ -106,6 +119,31 @@ frontend/app/src/androidTest/
 frontend/keystore/
 frontend/release/
 frontend/app/release/
+app/android/app/*.keystore
+app/android/app/*.jks
+app/android/app/release/
+
+# ─────────────────────────────────────────────
+# iOS (app/ios/)
+# ─────────────────────────────────────────────
+app/ios/App/build/
+app/ios/App/Pods/
+app/ios/App/.xcworkspace/
+app/ios/App/xcuserdata/
+app/ios/App/App.xcarchive
+app/ios/App/DerivedData/
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+!default.pbxuser
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3
+xcuserdata/
+DerivedData/
+.xcworkspace/
+!default.xcworkspace
 
 # ─────────────────────────────────────────────
 # 기타 빌드 / 패키지 산출물

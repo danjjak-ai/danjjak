@@ -1,0 +1,235 @@
+/* ==========================================
+   Danjjak (단짝) — Global Design System
+   ========================================== */
+
+:root {
+  /* ─── Color Palette ─── */
+  --primary: #6750A4;
+  --primary-light: #917AFF;
+  --primary-dark: #4A3880;
+  --primary-container: #EADDFF;
+
+  --secondary: #625B71;
+  --secondary-container: #E8DEF8;
+
+  --surface: #1E1E2E;
+  --surface-dim: #141422;
+  --surface-bright: #2A2A3E;
+  --surface-container: #252538;
+  --surface-variant: #49454F;
+
+  --on-primary: #FFFFFF;
+  --on-surface: #E6E1E5;
+  --on-surface-variant: #CAC4D0;
+  --on-surface-muted: #938F99;
+
+  --outline: #79747E;
+  --outline-variant: #49454F;
+
+  /* Category Colors */
+  --cat-health: #4CAF50;
+  --cat-media: #FF9800;
+  --cat-location: #2196F3;
+  --cat-personal: #E91E63;
+  --cat-study: #9C27B0;
+
+  /* Status */
+  --success: #4CAF50;
+  --warning: #FF9800;
+  --error: #F44336;
+
+  /* ─── Typography ─── */
+  --font-primary: 'Noto Sans KR', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-display: 'Inter', 'Noto Sans KR', sans-serif;
+
+  /* ─── Spacing ─── */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+
+  /* ─── Radius ─── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ─── Shadows ─── */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+  --shadow-glow: 0 0 20px rgba(103,80,164,0.4);
+
+  /* ─── Transitions ─── */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Safe areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* ─── Global Reset ─── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: var(--font-primary);
+  background-color: var(--surface);
+  color: var(--on-surface);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  overscroll-behavior: none;
+}
+
+/* ─── Ionic Overrides ─── */
+ion-content {
+  --background: var(--surface);
+  --color: var(--on-surface);
+}
+
+ion-toolbar {
+  --background: var(--surface);
+  --color: var(--on-surface);
+  --border-color: var(--outline-variant);
+}
+
+ion-tab-bar {
+  --background: var(--surface-container);
+  --color: var(--on-surface-muted);
+  --color-selected: var(--primary-light);
+  border-top: 1px solid var(--outline-variant);
+}
+
+ion-tab-button {
+  --color: var(--on-surface-muted);
+  --color-selected: var(--primary-light);
+}
+
+ion-toggle {
+  --track-background: var(--surface-variant);
+  --track-background-checked: var(--primary);
+  --handle-background: var(--on-surface);
+  --handle-background-checked: var(--on-primary);
+}
+
+/* ─── Glassmorphism Card ─── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.glass-card-bright {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ─── Gradient Backgrounds ─── */
+.gradient-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+}
+
+.gradient-surface {
+  background: linear-gradient(180deg, var(--surface) 0%, var(--surface-dim) 100%);
+}
+
+.gradient-hero {
+  background: linear-gradient(160deg, #1E1E2E 0%, #2A1F4E 40%, #1E1E2E 100%);
+}
+
+/* ─── Animations ─── */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.05); opacity: 1; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(103,80,164,0.3); }
+  50% { box-shadow: 0 0 40px rgba(145,122,255,0.6); }
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes scan-line {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.animate-breathe {
+  animation: breathe 4s ease-in-out infinite;
+}
+
+.animate-glow {
+  animation: glow-pulse 3s ease-in-out infinite;
+}
+
+.animate-fade-in {
+  animation: fade-in-up 0.5s ease-out forwards;
+}
+
+.shimmer-loading {
+  background: linear-gradient(90deg, var(--surface-container) 25%, var(--surface-bright) 50%, var(--surface-container) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: var(--radius-md);
+}
+
+/* ─── Utility Classes ─── */
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary-light), #D4BBFF);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.badge-health { background: rgba(76,175,80,0.15); color: var(--cat-health); }
+.badge-media { background: rgba(255,152,0,0.15); color: var(--cat-media); }
+.badge-location { background: rgba(33,150,243,0.15); color: var(--cat-location); }
+.badge-personal { background: rgba(233,30,99,0.15); color: var(--cat-personal); }
+.badge-study { background: rgba(156,39,176,0.15); color: var(--cat-study); }
+
+/* ─── Scrollbar ─── */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--outline-variant); border-radius: var(--radius-full); }
