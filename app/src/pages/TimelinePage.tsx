@@ -1,5 +1,6 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { IonContent, IonPage } from '@ionic/react';
+import { api } from '../services/api';
 import './TimelinePage.css';
 
 interface TimelineEvent {
@@ -7,6 +8,7 @@ interface TimelineEvent {
   title: string;
   description: string;
   category: 'Health' | 'Media' | 'Location' | 'Personal' | 'Study';
+  date?: number;
 }
 
 // Mock 데이터
