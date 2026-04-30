@@ -53,9 +53,12 @@ export const api = {
       body: JSON.stringify({ text, tags, timestamp: Date.now() }),
     }),
 
+  getHistory: () =>
+    request<{ success: boolean; history: any[] }>('/api/journal'),
+
   // ─── AI Advice ───
   getAdvice: () =>
-    request<{ advice: string }>('/api/nudge/advice'),
+    request<{ advice: string }>('/api/nudge'),
 
   // ─── Feedback ───
   sendFeedback: (reaction: 'LIKE' | 'DISLIKE') =>

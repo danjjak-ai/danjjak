@@ -30,10 +30,8 @@ export class MemoryService {
         this.l0_storage.push(data);
         console.log(`[L0] Raw data captured: ${data.type}`);
 
-        // Trigger background analysis to L1 if threshold met (simulated)
-        if (this.l0_storage.length % 5 === 0) {
-            await this.processL0ToL1();
-        }
+        // 즉시 L1으로 변환하여 반영되도록 수정 (임계값 제거)
+        await this.processL0ToL1();
     }
 
     /**
@@ -59,11 +57,19 @@ export class MemoryService {
         const lastData = this.l0_storage[this.l0_storage.length - 1];
         if (!lastData) return;
 
+        let description = `사용자가 ${lastData.type} 기반으로 특정 활동을 수행함.`;
+        let event = "Activity Detected";
+
+        if (lastData.type === 'MEAL') {
+            event = "Meal Captured";
+            description = `식사 기록: ${lastData.value.menu?.join(', ') || '알 수 없는 메뉴'} (${lastData.value.estimatedCalories || 0}kcal)`;
+        }
+
         const memory: NaturalMemory = {
             timestamp: new Date(),
-            event: "Activity Detected",
-            description: `사용자가 ${lastData.type} 기반으로 특정 활동을 수행함.`,
-            tags: ["daily", "auto-captured"]
+            event: event,
+            description: description,
+            tags: ["daily", lastData.type === 'MEAL' ? "auto-analyzed" : "auto-captured"]
         };
         this.l1_storage.push(memory);
         console.log(`[L1] Natural Language Memory created: ${memory.event}`);
@@ -76,12 +82,17 @@ export class MemoryService {
      */
     private async updateL2() {
         // In a real app, this would be a prompt to an LLM to "compress" the L1 memories
-        this.l2_context = `사용자는 주로 저녁 시간에 활동적이며, 특정 장소에서 앱 사용량이 높음. (L2 State Updated)`;
+        const recentActivities = this.l1_storage.slice(-3).map(m => m.description).join(". ");
+        this.l2_context = `최근 활동 요약: ${recentActivities}. (L2 State Updated)`;
         console.log(`[L2] AI-Native Context updated.`);
     }
 
     public getContext(): string {
         return this.l2_context + "\nRecent History: " + this.l1_storage.slice(-1).map(m => m.description).join(", ");
+    }
+
+    public getHistory(): NaturalMemory[] {
+        return [...this.l1_storage].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
     }
 }
 

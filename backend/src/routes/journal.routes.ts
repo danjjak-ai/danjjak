@@ -19,4 +19,13 @@ router.post('/', async (req, res) => {
     }
 });
 
+router.get('/', (req, res) => {
+    try {
+        const history = memoryService.getHistory();
+        res.status(200).json({ success: true, history });
+    } catch (error) {
+        res.status(500).json({ success: false, error: 'Failed to fetch history' });
+    }
+});
+
 export default router;

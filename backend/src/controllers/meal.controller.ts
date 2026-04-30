@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { aiGateway } from '../services/aiGateway.service.js';
-import { memoryRegistry } from '../services/memory.service.js';
+import { memoryService } from '../services/memory.service.js';
 
 export class MealController {
     /**
@@ -42,7 +42,6 @@ JSON만 응답하세요.`;
             const mealData = JSON.parse(jsonStr);
 
             // 2. 메모리 서비스에 저장
-            const memoryService = memoryRegistry.getForUser(userId || 'default_user');
             memoryService.storeL0({
                 timestamp: new Date(),
                 type: 'MEAL',

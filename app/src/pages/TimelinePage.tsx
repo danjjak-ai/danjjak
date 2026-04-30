@@ -48,6 +48,8 @@ const TimelinePage: React.FC = () => {
   const [selectedDay, setSelectedDay] = useState(today.getDate());
   const [currentMonth] = useState(today.getMonth());
   const [currentYear] = useState(today.getFullYear());
+  const [history, setHistory] = useState<TimelineEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfWeek = new Date(currentYear, currentMonth, 1).getDay();
@@ -60,7 +62,41 @@ const TimelinePage: React.FC = () => {
     return days;
   }, [daysInMonth, firstDayOfWeek]);
 
-  const events = mockEvents[selectedDay] || [];
+  useEffect(() => {
+    const fetchHistory = async () => {
+      setIsLoading(true);
+      try {
+        const res = await api.getHistory();
+        if (res.success) {
+          const formattedHistory: TimelineEvent[] = res.history.map((h: any) => ({
+            time: new Date(h.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', hour12: false }),
+            title: h.event,
+            description: h.description,
+            category: h.event.includes('Meal') ? 'Health' : 'Personal',
+            date: new Date(h.timestamp).getDate()
+          }));
+          setHistory(formattedHistory);
+        }
+      } catch (err) {
+        console.error('Failed to fetch history:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchHistory();
+  }, []);
+
+  const events = useMemo(() => {
+    // API 데이터 중 선택된 날짜와 일치하는 것 필터링
+    const apiEvents = history.filter((h: any) => h.date === selectedDay);
+    
+    // API 데이터가 없으면 Mock 데이터 사용 (데모용)
+    if (apiEvents.length === 0) {
+      return mockEvents[selectedDay] || [];
+    }
+    return apiEvents;
+  }, [history, selectedDay]);
+
   const weekLabels = ['일', '월', '화', '수', '목', '금', '토'];
 
   return (
@@ -83,16 +119,20 @@ const TimelinePage: React.FC = () => {
               ))}
             </div>
             <div className="calendar-grid">
-              {calendarDays.map((day, idx) => (
-                <button
-                  key={idx}
-                  className={`calendar-day ${day === selectedDay ? 'calendar-day--selected' : ''} ${day === today.getDate() ? 'calendar-day--today' : ''} ${!day ? 'calendar-day--empty' : ''} ${day && mockEvents[day] ? 'calendar-day--has-events' : ''}`}
-                  onClick={() => day && setSelectedDay(day)}
-                  disabled={!day}
-                >
-                  {day || ''}
-                </button>
-              ))}
+              {calendarDays.map((day, idx) => {
+                const hasApiEvents = history.some(h => (h as any).date === day);
+                const hasMockEvents = !!(day && mockEvents[day]);
+                return (
+                  <button
+                    key={idx}
+                    className={`calendar-day ${day === selectedDay ? 'calendar-day--selected' : ''} ${day === today.getDate() ? 'calendar-day--today' : ''} ${!day ? 'calendar-day--empty' : ''} ${day && (hasApiEvents || hasMockEvents) ? 'calendar-day--has-events' : ''}`}
+                    onClick={() => day && setSelectedDay(day)}
+                    disabled={!day}
+                  >
+                    {day || ''}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -102,7 +142,9 @@ const TimelinePage: React.FC = () => {
               {currentMonth + 1}월 {selectedDay}일의 기록
             </h2>
 
-            {events.length === 0 ? (
+            {isLoading ? (
+              <div className="events-loading">잠시만 기다려주세요...</div>
+            ) : events.length === 0 ? (
               <div className="events-empty glass-card">
                 <span className="events-empty-icon">📝</span>
                 <p className="events-empty-text">이 날의 기록이 없어요</p>
